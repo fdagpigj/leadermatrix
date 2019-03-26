@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leader matrix</title>
+	<style type="text/css">
+		td, th {
+			border: 1px solid rgb(190,190,190);
+			padding: 10px 20px;
+		}
+	</style>
+</head>
+<body>
+<table>
+	<thead>
+		<tr id="matrix-title">
+			<th></th>
+		</tr>
+	</thead>
+	<tbody id="matrix">
+</table>
+</body>
+<script type="text/javascript">
+const GAME_ID = "y654r24d";
+const CATEGORY = "z27l3nzd";
+const BASE = "https://www.speedrun.com/api/v1/leaderboards/"+GAME_ID+"/category/"+CATEGORY+"?top=1"
+const COLS = [
+				["2-island easy", "var-9l7175zl=81wdmzmq&var-jlz5wx7l=jq6x4nvq"],
+				["2-island hard", "var-9l7175zl=81wdmzmq&var-jlz5wx7l=5lm4xv8l"], 
+				["4-island easy", "var-9l7175zl=zqo3yk5q&var-jlz5wx7l=jq6x4nvq"], 
+				["4-island hard", "var-9l7175zl=zqo3yk5q&var-jlz5wx7l=5lm4xv8l"],
+			];
+const ROWS = [
+				["Rift Walkers", "var-6njq4yvl=5le4k9m1"],
+				["Rusting Hulks", "var-6njq4yvl=0q55oy7q"],
+				["Zenith Guard", "var-6njq4yvl=4lx8xr31"],
+				["Blitzkrieg", "var-6njq4yvl=814vx8e1"],
+				["Steel Judoka", "var-6njq4yvl=z19946y1"],
+				["Flame Behemoths", "var-6njq4yvl=p12w5rd1"],
+				["Frozen Titans", "var-6njq4yvl=81p07vvq"],
+				["Hazardous Mechs", "var-6njq4yvl=xqk4r2dl"],
+				["Secret Squad", "var-6njq4yvl=gq74n0pq"],
+				["Custom Squad", "var-6njq4yvl=21g4jv61"],
+];
+
+var results = {};
+var result_length = 0;
+const DONE_LENGTH = COLS.length * ROWS.length;
+
+function main() {
+	for (let i = COLS.length - 1; i >= 0; i--) {
+		let col = COLS[i];
+		for (let j = ROWS.length - 1; j >= 0; j--) {
+			let row = ROWS[j];
+			let coords = "(" + i + "," + j + ")";
+			let url = BASE + "&" + col[1] + "&" + row[1];
+
+			let xmlhttp = new XMLHttpRequest();
+			xmlhttp.onreadystatechange = function() {
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					let data = JSON.parse(xmlhttp.responseText);
+					console.log(data);
+					results[coords] = data.data;
+					++result_length;
+					checkIfDone();
+				}
+			}
+			xmlhttp.open("GET", url, true);
+			xmlhttp.overrideMimeType("application/json");
+			xmlhttp.send();
+		}
+	}
+}
+
+function checkIfDone() {
+	if (result_length == DONE_LENGTH) {
+		done();
+	}
+}
+
+function done() {
+	let titles = document.getElementById("matrix-title");
+	for (let i = COLS.length - 1; i >= 0; i--) {
+		let title = COLS[i][0];
+		let elem = document.createElement("th");
+		elem.innerHTML = title;
+		titles.appendChild(elem);
+	}
+	let table = document.getElementById("matrix");
+	for (let j = ROWS.length - 1; j >= 0; j--) {
+		let row_elem = document.createElement("tr");
+		let title = ROWS[j][0];
+		let title_elem = document.createElement("th");
+		title_elem.innerHTML = title;
+		row_elem.appendChild(title_elem);
+		for (let i = COLS.length - 1; i >= 0; i--) {
+			let coords = "(" + i + "," + j + ")";
+			let data = results[coords];
+			let time;
+			let link;
+			try {
+				time_data = data.runs[0].run.times.primary;
+				time = time_data.split("PT")[1].replace("H",":").replace("M",":").replace("S","");
+				link = data.runs[0].run.weblink;
+			}
+			catch {
+				time = "-";
+			}
+			let field_elem = document.createElement("td");
+			if (link) {
+				let link_elem = document.createElement("a");
+				link_elem.innerHTML = time;
+				link_elem.href = link;
+				field_elem.appendChild(link_elem);
+			}
+			else {
+				field_elem.innerHTML = time;
+			}
+			row_elem.appendChild(field_elem);
+		}
+		table.appendChild(row_elem);
+	}
+}
+
+window.onload = main;
+//done();
+
+</script>
+</html>
